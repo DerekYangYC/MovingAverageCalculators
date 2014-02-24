@@ -25,7 +25,6 @@ public class SimpleMovingAverageAnalysis implements ITechnicalAnalysis {
 	private ICalculatorProperties properties;
 
 	private final Logger log = Logger.getLogger(getClass());
-	private final static SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
 
 	private final static SimpleDateFormat cdf = new SimpleDateFormat("yyyy-MM-dd HH:mm");
 
@@ -33,24 +32,7 @@ public class SimpleMovingAverageAnalysis implements ITechnicalAnalysis {
 		this.properties = properties;
 	}
 
-	public double calculate(List<TradeBean> tradeList, int choice) {
-
-		double result = 0;
-
-		try {
-			if (choice == 1) {
-				calculateForTrades(tradeList);
-			} else {
-				calculateForMinute(tradeList);
-			}
-		} catch (ParseException e) {
-			log.error(e.getMessage());
-		}
-		return result;
-	}
-
-	private Map<Integer, Double> calculateForTrades(List<TradeBean> tradeList)
-			throws ParseException {
+	public Map<Integer, Double> calculateForTrades(List<TradeBean> tradeList) throws ParseException {
 
 		double result = 0;
 		Map<Integer, Double> map = new HashMap<Integer, Double>();
@@ -88,8 +70,7 @@ public class SimpleMovingAverageAnalysis implements ITechnicalAnalysis {
 		return map;
 	}
 
-	private Map<Integer, Double> calculateForMinute(List<TradeBean> tradeList)
-			throws ParseException {
+	public Map<Integer, Double> calculateForMinute(List<TradeBean> tradeList) throws ParseException {
 
 		double result = 0;
 		Map<Integer, Double> map = new HashMap<Integer, Double>();
@@ -101,17 +82,7 @@ public class SimpleMovingAverageAnalysis implements ITechnicalAnalysis {
 
 		if (properties.getStartTime().isEmpty() && properties.getEndTime().isEmpty()) {
 
-			int index = 0;
-			Calendar c = tradeList.get(0).getTradeDateTime();
-			c.add(Calendar.MINUTE, num);
-
-			for (TradeBean bean : tradeList) {
-				if (!bean.getTradeDateTime().before(c)) {
-					index++;
-					break;
-				}
-			}
-			result = calculateLastMinutes(tradeList, index, num);
+			result = calculateLastMinutes(tradeList, num, num);
 			map.put(num, result);
 
 		} else if (!properties.getStartTime().isEmpty() && !properties.getEndTime().isEmpty()) {
@@ -141,6 +112,19 @@ public class SimpleMovingAverageAnalysis implements ITechnicalAnalysis {
 
 	public double calculateLastTrades(List<TradeBean> tradeList, int i, int n) {
 
+		if (tradeList.size() == 0 || tradeList == null) {
+			throw new IllegalArgumentException("Empty tradeList while calculating last n trades");
+		}
+
+		if (i < 0 || i >= tradeList.size()) {
+			throw new IllegalArgumentException(
+					"Too large or too small index for calculateLastTrades()");
+		}
+
+		if (n < 1) {
+			throw new IllegalArgumentException("Trades Number can NOT be less than 1");
+		}
+
 		int tmpSum = 0;
 		int index = i;
 		int count = 0;
@@ -153,33 +137,54 @@ public class SimpleMovingAverageAnalysis implements ITechnicalAnalysis {
 			count++;
 			index--;
 		}
-		System.out.println(tmpSum);
+
+		if (log.isInfoEnabled()) {
+			log.info("Calculating trade-tmpSum: " + tmpSum + " count:" + count);
+		}
+
 		return (double) tmpSum / (count * FileHandler.DECIMAL_NUM);
 	}
 
 	public double calculateLastMinutes(List<TradeBean> tradeList, int i, int m) {
 
+		if (tradeList.size() == 0 || tradeList == null) {
+			throw new IllegalArgumentException("Empty tradeList while calculating last m minutes");
+		}
+
+		if (i < 0 || i >= tradeList.size()) {
+			throw new IllegalArgumentException(
+					"Too large or too small index for calculateLastMinutes()");
+		}
+
+		if (m < 1) {
+			throw new IllegalArgumentException("Minutes can NOT be less than 1");
+		}
+
 		int tmpSum = 0;
-		int index = i;
 		int count = 0;
+		int index = i;
 
 		TradeBean tmpBean = tradeList.get(index);
-
 		Calendar now = tmpBean.getTradeDateTime();
-		Calendar last = (Calendar) tmpBean.getTradeDateTime().clone();
-		last.add(Calendar.MINUTE, -m);
+		Calendar lastMinute = (Calendar) tmpBean.getTradeDateTime().clone();
+		lastMinute.add(Calendar.MINUTE, -m);
 
-		System.out.println("now:" + sdf.format(now.getTime()) + "; last:"
-				+ sdf.format(last.getTime()));
+		while (index >= 0 && !now.before(lastMinute)) {
 
-		while (index >= 0 && !now.before(last)) {
+			tmpBean = tradeList.get(index);
 			tmpSum += tmpBean.getPrice();
+
+			if (index != 0) {
+				now = tradeList.get(index - 1).getTradeDateTime();
+			}
 			count++;
 			index--;
-			tmpBean = tradeList.get(index);
-			now = tmpBean.getTradeDateTime();
 		}
-		System.out.println(tmpSum);
+
+		if (log.isInfoEnabled()) {
+			log.info("Calculating minute-tmpSum: " + tmpSum + " count:" + count);
+		}
+
 		return (double) tmpSum / (count * FileHandler.DECIMAL_NUM);
 	}
 

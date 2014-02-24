@@ -7,6 +7,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.text.ParseException;
 import java.util.List;
+import java.util.Map;
 import java.util.Scanner;
 
 import org.apache.log4j.Logger;
@@ -62,12 +63,14 @@ public class StartService {
 		SimpleMovingAverageAnalysis sma = context.getBean(SimpleMovingAverageAnalysis.class);
 		ExponentialMovingAverage ema = context.getBean(ExponentialMovingAverage.class);
 
-		List<TradeBean> list = fileHandler.read();
+		Map<String, List<TradeBean>> map = fileHandler.read();
+		List<TradeBean> rawList = map.get("raw");
+		List<TradeBean> minuteList = map.get("minute");
 
 		if (choice == 1) {
-			sma.calculate(list, 1);
+			sma.calculateForTrades(rawList);
 		} else if (choice == 2) {
-			sma.calculate(list, 2);
+			sma.calculateForMinute(minuteList);
 		} else if (choice == 3) {
 			ema.calculate();
 		} else {

@@ -8,7 +8,7 @@ import java.util.Calendar;
 
 /**
  * @author DerekYang
- *
+ * 
  */
 public class TradeBean {
 	private String symbol;
@@ -16,10 +16,7 @@ public class TradeBean {
 	private int decimal;
 	private int size;
 	private Calendar tradeDateTime;
-	
-	private final static SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
 
-	
 	public TradeBean(String symbol, int price, int decimal, int size, Calendar tradeDateTime) {
 		this.symbol = symbol;
 		this.price = price;
@@ -27,7 +24,6 @@ public class TradeBean {
 		this.size = size;
 		this.tradeDateTime = tradeDateTime;
 	}
-
 
 	public String getSymbol() {
 		return symbol;
@@ -71,10 +67,14 @@ public class TradeBean {
 
 	@Override
 	public String toString() {
-		return "TradeBean [symbol=" + symbol + ", price=" + price + ", decimal="
-				+ decimal + ", size=" + size + ", time=" + sdf.format(tradeDateTime.getTime()) + "]";
+		return "TradeBean [symbol=" + symbol + ", price=" + price + ", decimal=" + decimal
+				+ ", size=" + size + ", time=" + tradeDateTime.getTime().toString() + "]";
 	}
 
-	
-	
+	public String toString(SimpleDateFormat sdf) {
+		return "TradeBean [" + symbol + ", " + price + ", "
+				+ sdf.format(tradeDateTime.getTime()) + ", " + decimal + ", " + size
+				+ "]";
+	}
+
 }
