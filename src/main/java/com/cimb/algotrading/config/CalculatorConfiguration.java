@@ -15,31 +15,32 @@ import com.cimb.algotrading.handler.FileHandler;
 
 /**
  * @author DerekYang
- *
+ * 
  */
 @Configuration
 public class CalculatorConfiguration {
 
-	private @Autowired ICalculatorProperties properties;
-	
+	private @Autowired
+	ICalculatorProperties properties;
+
 	@Bean
-	public FileHandler fileHandler(){
+	public FileHandler fileHandler() {
 		return new FileHandler(properties);
 	}
-	
+
 	@Bean
-	public SimpleMovingAverageAnalysis simpleMovingAverage(){
+	public SimpleMovingAverageAnalysis simpleMovingAverage() {
 		return new SimpleMovingAverageAnalysis(properties);
 	}
-	
+
 	@Bean
-	public ExponentialMovingAverage exponentialMovingAverage(){
+	public ExponentialMovingAverage exponentialMovingAverage() {
 		return new ExponentialMovingAverage(properties);
 	}
-	
+
 	@Bean
-	public MacdIndicatorAnalysis macdIndicatorAnalysis(){
-		return new MacdIndicatorAnalysis();
+	public MacdIndicatorAnalysis macdIndicatorAnalysis() {
+		return new MacdIndicatorAnalysis(this.exponentialMovingAverage(), properties);
 	}
-	
+
 }

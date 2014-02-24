@@ -34,13 +34,14 @@ public class ExponentialMovingAverage implements ITechnicalAnalysis {
 	}
 
 	public Map<Integer, Double> calculate(List<TradeBean> tradeList) throws ParseException {
-		double result = 0;
-		Map<Integer, Double> map = new HashMap<Integer, Double>();
 
 		if (properties.numOfMinutes().isEmpty()) {
 			throw new IllegalArgumentException("Num of Minute is NOT set while calulating EMA...");
 		}
+
 		int num = Integer.parseInt(properties.numOfMinutes());
+		double result = 0;
+		Map<Integer, Double> map = new HashMap<Integer, Double>();
 
 		if (properties.getStartTime().isEmpty() && properties.getEndTime().isEmpty()) {
 
@@ -96,7 +97,7 @@ public class ExponentialMovingAverage implements ITechnicalAnalysis {
 		lastMinute.add(Calendar.MINUTE, -m);
 
 		while (index >= 0 && !now.before(lastMinute)) {
-			
+
 			tmpBean = tradeList.get(index);
 			priceList.add(tmpBean.getPrice());
 

@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.text.ParseException;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Scanner;
 
 import org.apache.log4j.Logger;
@@ -15,6 +16,7 @@ import org.springframework.context.annotation.AnnotationConfigApplicationContext
 
 import com.cimb.algotrading.bean.TradeBean;
 import com.cimb.algotrading.calculation.ExponentialMovingAverage;
+import com.cimb.algotrading.calculation.MacdIndicatorAnalysis;
 import com.cimb.algotrading.calculation.SimpleMovingAverageAnalysis;
 import com.cimb.algotrading.config.CalculatorConfiguration;
 import com.cimb.algotrading.config.properties.CalculatorPropertiesFactory;
@@ -53,6 +55,7 @@ public class StartService {
 	}
 
 	private void start() throws FileNotFoundException, IOException, ParseException {
+
 		properties = CalculatorPropertiesFactory.create();
 		context = new AnnotationConfigApplicationContext();
 		context.getBeanFactory().registerSingleton("properties", properties);
@@ -62,21 +65,79 @@ public class StartService {
 		FileHandler fileHandler = context.getBean(FileHandler.class);
 		SimpleMovingAverageAnalysis sma = context.getBean(SimpleMovingAverageAnalysis.class);
 		ExponentialMovingAverage ema = context.getBean(ExponentialMovingAverage.class);
+		MacdIndicatorAnalysis macd = context.getBean(MacdIndicatorAnalysis.class);
 
 		Map<String, List<TradeBean>> map = fileHandler.read();
 		List<TradeBean> rawList = map.get("raw");
 		List<TradeBean> minuteList = map.get("minute");
 
 		if (choice == 1) {
-			sma.calculateForTrades(rawList);
+			printResult(sma.calculateForTrades(rawList), 1);
 		} else if (choice == 2) {
-			sma.calculateForMinute(minuteList);
+			printResult(sma.calculateForMinute(minuteList), 2);
 		} else if (choice == 3) {
-			ema.calculate();
+			printResult(ema.calculate(minuteList), 3);
+		} else {
+			printResult(macd.calculate(minuteList), 4);
+		}
+	}
+
+	private void printResult(Map<Integer, Double> map, int choice) {
+		if (map.size() == 1) {
+			Integer key = 0;
+			Double value = 0.0;
+			for (Entry<Integer, Double> e : map.entrySet()) {
+				key = e.getKey();
+				value = e.getValue();
+			}
+
+			switch (choice) {
+			case 1:
+				System.out.format("The Simple moving average over the last %d trades is: %.3f %n",
+						key, value);
+				break;
+			case 2:
+				System.out.format("The Simple moving average over the last %d minutes is: %.3f %n",
+						key, value);
+				break;
+			case 3:
+				System.out.format(
+						"The Exponential Moving Average over the last %d minutes is: %.3f %n", key,
+						value);
+				break;
+			case 4:
+				System.out.format("The MACD is: %.3f", value);
+				break;
+			}
+
 		} else {
 
-		}
+			switch (choice) {
+			case 1:
+				System.out
+						.println("The Simple moving average over the trades within the start time and end time are:");
+				break;
 
+			case 2:
+				System.out
+						.println("The Simple moving average over the minutes within the start time and end time are:");
+				break;
+			case 3:
+				System.out
+						.println("The Exponential Moving Average over the minutes within the start time and end time are:");
+				break;
+			case 4:
+				System.out
+						.println("The Exponential Moving Average over the minutes within the start time and end time are:");
+				break;
+			}
+
+			for (Entry<Integer, Double> e : map.entrySet()) {
+				if (log.isInfoEnabled())
+					log.info("ema key:" + e.getKey());
+				System.out.format(" %.3f  %n", e.getValue());
+			}
+		}
 	}
 
 	/**
